@@ -3,6 +3,7 @@ import http from "http";
 import url from "url";
 import fs from "fs";
 import express from "express";
+import { parse } from "path";
 
 //B. configurazioni
 const port: number = 1337;
@@ -69,9 +70,9 @@ app.get("/api/richiestaParams/:gender/:id", function(req, res, next){
     let gender = req.params.gender;
     let id = req.params.id;
 
-    if(!gender || !id)
+    if(isNaN(parseInt(id)))
     {
-        res.status(400).send("Parametri mancanti");
+        res.status(422).send("Formato id non valido. Atteso un numero");
     }
     else
     {

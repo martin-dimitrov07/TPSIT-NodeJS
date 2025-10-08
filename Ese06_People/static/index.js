@@ -13,7 +13,103 @@ btnAdd.addEventListener("click", function(){
 	window.location.href = "./inserisci.html"
 })
 
-divDettagli.style.display="none"
-getCountries()
+divDettagli.style.display="none";
+getCountries();
 
+async function getCountries(){
+    let response = await inviaRichiesta("GET", "/api/countries");
 
+    if(response.status == 200)
+    {
+        const countries = response.data;
+        console.log(countries);
+
+        for (const country of countries) 
+        {
+            let a = document.createElement("a");   
+            a.classList.add("dropdown-item");
+            a.href = "#";
+            a.textContent = country;
+            a.addEventListener("click", function(){ getPeopleByCountry(country); dropdownMenuButton.textContent = country; });
+            lstCountries.appendChild(a);
+        }
+    }
+    else
+    {
+        console.error("Error", response.err);
+        alert(response.status + ": " + response.err);
+    }
+}
+
+async function getPeopleByCountry(country)
+{
+    let response = await inviaRichiesta("GET", "/api/getPeopleByCountry", {country});
+
+    if(response.status == 200)
+    {
+        console.log(response.data);
+
+        tabStudenti.innerHTML = "";
+
+        for (const person of response.data) 
+        {
+            let tr = document.createElement("tr");
+            tabStudenti.appendChild(tr);
+            
+            for (const key in person) {
+                let td = document.createElement("td");
+                if(key == "name")
+                    td.textContent = person[key].title + " " + person[key].first + " " + person[key].last;
+                else
+                    td.textContent = person[key];
+
+                tr.appendChild(td);
+            }
+
+            let td = document.createElement("td");
+            let btn = document.createElement("button");
+            btn.classList.add("btn", "btn-primary");
+            btn.textContent = "Dettagli";
+            btn.addEventListener("click", function(){ showDetails(person.name) });
+            td.appendChild(btn);
+            tr.appendChild(td);
+
+            td = document.createElement("td");
+            btn = document.createElement("button");
+            btn.classList.add("btn", "btn-primary");
+            btn.textContent = "Elimina";
+            btn.addEventListener("click", function(){ Delete(person.name) });
+            td.appendChild(btn);
+            tr.appendChild(td);
+
+        }
+    }
+    else
+        alert(response.status + ": " + response.err);
+}
+
+async function showDetails(name)
+{
+    let response = await inviaRichiesta("GET", "/api/getPersonDetails", {name});
+
+    if(response.status == 200)
+    {
+        console.log(response.data);
+
+        const person = response.data;
+
+        divDettagli.querySelector(".card-title").innerHTML = "";
+        divDettagli.querySelector(".card-text").innerHTML = "";
+        divDettagli.style.display = "block";
+
+        divDettagli.querySelector(".card-title").textContent = person.name.title + " " + person.name.first + " " + person.name.last;
+        divDettagli.querySelector(".card-text").innerHTML = `
+            <strong>Gender:</strong> ${person.gender} <br>
+            <strong>Address:</strong> ${person.address} <br>
+            <strong>Email:</strong> ${person.email} <br>
+            <strong>Dob:</strong> ${person.dob} <br>
+        `;
+    }
+    else
+        alert(response.status + ": " + response.err);
+}

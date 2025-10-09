@@ -49,6 +49,8 @@ async function getPeopleByCountry(country)
     {
         console.log(response.data);
 
+        peopleList = response.data;
+
         tabStudenti.innerHTML = "";
 
         for (const person of response.data) 
@@ -65,6 +67,8 @@ async function getPeopleByCountry(country)
 
                 tr.appendChild(td);
             }
+
+            //console.log(person.name);
 
             let td = document.createElement("td");
             let btn = document.createElement("button");
@@ -90,7 +94,8 @@ async function getPeopleByCountry(country)
 
 async function showDetails(name)
 {
-    let response = await inviaRichiesta("GET", "/api/getPersonDetails", {name});
+    //console.log(name);
+    let response = await inviaRichiesta("GET", "/api/getPersonDetails", name);
 
     if(response.status == 200)
     {
@@ -102,14 +107,72 @@ async function showDetails(name)
         divDettagli.querySelector(".card-text").innerHTML = "";
         divDettagli.style.display = "block";
 
+        divDettagli.querySelector(".card-img-top").src = person.picture.large;
         divDettagli.querySelector(".card-title").textContent = person.name.title + " " + person.name.first + " " + person.name.last;
         divDettagli.querySelector(".card-text").innerHTML = `
             <strong>Gender:</strong> ${person.gender} <br>
-            <strong>Address:</strong> ${person.address} <br>
+            <strong>Address:</strong> ${JSON.stringify(person.location)} <br>
             <strong>Email:</strong> ${person.email} <br>
-            <strong>Dob:</strong> ${person.dob} <br>
+            <strong>Dob:</strong> ${JSON.stringify(person.dob)} <br>
         `;
+
+        currentPos = peopleList.findIndex(person => JSON.stringify(person.name) == JSON.stringify(name));
     }
     else
         alert(response.status + ": " + response.err);
 }
+
+async function Delete(name)
+{
+    if(confirm(`Sei sicuro di voler eliminare "${name.title} ${name.first} ${name.last}"?`))
+    {
+        let response = await inviaRichiesta("DELETE", "/api/deletePerson", name);
+
+        if(response.status == 200)
+        {
+            // console.log(response.data);
+            alert("Persona eliminata correttamente");
+            divDettagli.style.display="none";
+            getPeopleByCountry(dropdownMenuButton.textContent);
+        }
+        else
+            alert(response.status + ": " + response.err);
+    }
+}
+
+
+//GESTIONE PULSANTI DI NAVIGAZIONE
+
+const btns = document.querySelectorAll("a");
+
+btns[0].addEventListener("click", function(){ // first
+    if(currentPos != 0)
+    {
+        currentPos = 0;
+        showDetails(peopleList[currentPos].name);
+    }
+});
+
+btns[1].addEventListener("click", function(){ // previous
+    if(currentPos != 0)
+    {
+        currentPos--;
+        showDetails(peopleList[currentPos].name);
+    }
+});
+
+btns[2].addEventListener("click", function(){ // next
+    if(currentPos != peopleList.length - 1)
+    {
+        currentPos++;
+        showDetails(peopleList[currentPos].name);
+    }
+});
+
+btns[3].addEventListener("click", function(){ // last
+    if(currentPos != peopleList.length - 1)
+    {
+        currentPos = peopleList.length - 1;
+        showDetails(peopleList[currentPos].name);
+    }
+});

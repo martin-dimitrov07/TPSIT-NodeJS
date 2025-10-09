@@ -91,7 +91,7 @@ app.get("/api/getPeopleByCountry", function(req, res, next){
     {
         const peopleCountry = people.results.filter(person => person.location.country == country).map(person => { 
             return {
-                name: { "first": person.name.first, "last": person.name.last, "title": person.name.title },
+                name: { "title": person.name.title, "first": person.name.first, "last": person.name.last },
                 city: person.location.city,
                 state: person.location.state,
                 cell: person.cell
@@ -103,22 +103,48 @@ app.get("/api/getPeopleByCountry", function(req, res, next){
 });
 
 app.get("/api/getPersonDetails", function(req, res, next){
-    let name = req.query.name;
+    const name = req.query; // contiene un JSON con i parametri (non serializzato) - vale solo per GET
     if(!name)
     {
         res.status(400).send("Parametro name mancante");
     }
     else
     {
-        //NON FUNZIONA
-        const person = people.results.find(person => name == `{ "first": ${person.name.first}, "last": ${person.name.last}, "title": ${person.name.title} }` );
+        const person = people.results.find(person => JSON.stringify(person.name) == JSON.stringify(name) );
 
         if(!person)
-            res.status(404).send("Persona non trovata");
+          res.status(404).send("Persona non trovata");
         else
             res.send(person);
     }
 })
+
+app.delete("/api/deletePerson", function(req, res, next){
+    const name = req.body; // contiene un JSON con i parametri (non serializzato) - vale solo per POST/PUT/DELETE
+
+    if(!name)
+    {
+        res.status(400).send("Parametro name mancante");
+    }
+    else
+    {
+        const indexPerson = people.results.findIndex(person => JSON.stringify(person.name) == JSON.stringify(name) );
+
+        if(indexPerson == -1)
+            res.status(404).send("Persona non trovata");
+        else
+        {
+            people.results.splice(indexPerson, 1);
+
+            fs.writeFile("./people.json", JSON.stringify(people), function(err){
+                if(!err)
+                    res.send({"ris": "ok"});
+                else
+                    res.status(500).send("Errore interno del server (aggiornamento db fallito)");
+            });
+        }
+    }
+});
 
 
 //F. default root e gestione errori

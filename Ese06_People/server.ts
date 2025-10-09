@@ -135,17 +135,24 @@ app.delete("/api/deletePerson", function(req, res, next){
         else
         {
             people.results.splice(indexPerson, 1);
-
-            fs.writeFile("./people.json", JSON.stringify(people), function(err){
-                if(!err)
-                    res.send({"ris": "ok"});
-                else
-                    res.status(500).send("Errore interno del server (aggiornamento db fallito)");
-            });
+            SalvaSuDisco(res);
         }
     }
 });
 
+app.post("/api/insertPerson", function(req, res, next){
+    const person = req.body;
+
+    if(!person)
+    {
+        res.status(400).send("Parametro person mancante");
+    }
+    else
+    {
+        people.results.push(person);
+        SalvaSuDisco(res);
+    }
+})
 
 //F. default root e gestione errori
 app.use(function(req, res){
@@ -162,3 +169,14 @@ app.use(function(err: Error, req: express.Request, res: express.Response, next: 
     console.error("*** ERRORE ***:\n" + err.stack); //elenco completo degli errori
     res.status(500).send("Errore interno del server");
 });
+
+
+function SalvaSuDisco(res: express.Response)
+{
+    fs.writeFile("./people.json", JSON.stringify(people), function(err){
+        if(!err)
+            res.send({"ris": "ok"});
+        else
+            res.status(500).send("Errore interno del server (aggiornamento db fallito)");
+    });
+}

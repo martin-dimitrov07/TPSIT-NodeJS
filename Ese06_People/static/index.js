@@ -10,7 +10,7 @@ let currentPos;
 // let divDettagli 
 
 btnAdd.addEventListener("click", function(){
-	window.location.href = "./inserisci.html"
+	window.location.href = "./inserisci.html";
 })
 
 divDettagli.style.display="none";
@@ -107,13 +107,13 @@ async function showDetails(name)
         divDettagli.querySelector(".card-text").innerHTML = "";
         divDettagli.style.display = "block";
 
-        divDettagli.querySelector(".card-img-top").src = person.picture.large;
+        divDettagli.querySelector(".card-img-top").src = (person.picture) ? person.picture.large : "./img/user.png";
         divDettagli.querySelector(".card-title").textContent = person.name.title + " " + person.name.first + " " + person.name.last;
         divDettagli.querySelector(".card-text").innerHTML = `
             <strong>Gender:</strong> ${person.gender} <br>
             <strong>Address:</strong> ${JSON.stringify(person.location)} <br>
             <strong>Email:</strong> ${person.email} <br>
-            <strong>Dob:</strong> ${JSON.stringify(person.dob)} <br>
+            <strong>Dob:</strong> ${(person.dob) ? JSON.stringify(person.dob) : "unknown"} <br>
         `;
 
         currentPos = peopleList.findIndex(person => JSON.stringify(person.name) == JSON.stringify(name));

@@ -2,6 +2,8 @@
 import http from "http";
 import fs from "fs";
 import express from "express";
+import states from "./states.json";
+import radios from "./radios.json";
 import { count } from "console";
 import { ElementFlags } from "typescript";
 
@@ -51,7 +53,50 @@ app.use(function(req, res, next){
 });
 
 //E. gestione delle root dinamiche
+app.get("/api/elenco", function(req, res, next){
+    if(states)
+        res.send(states);
+    else
+        res.status(404).send("Regioni non trovate");
+})
 
+app.post("/api/radios", function(req, res, next){
+    const region = req.body.region;
+
+    if(region)
+    {
+        if(region != "tutti")
+        {
+            const regionRadios = radios.filter(radio => radio.state == region);
+
+            if(regionRadios)
+                res.send(regionRadios);
+            else
+                res.status(404).send("radio non trovate");
+        }
+        else
+            res.send(radios);
+    }
+    else
+        res.status(404).send("Paramentro regione mangiante");
+})
+
+app.patch("/api/like", function(req, res, next){
+    const idRadio = req.body.id;
+
+    if(idRadio)
+    {
+        const radio = radios.find(radio => radio.id == idRadio);
+
+        if(radio)
+            radio.votes = (parseInt(radio.votes) + 1).toString();
+
+        SalvaSuDisco(res);
+        res.send({"ris": "ok"});
+    }
+    else
+        res.status(404).send("Paramentro regione mangiante");
+})
 
 //F. default root e gestione errori
 app.use(function(req, res){
@@ -72,9 +117,9 @@ app.use(function(err: Error, req: express.Request, res: express.Response, next: 
 
 function SalvaSuDisco(res: express.Response)
 {
-    fs.writeFile("./people.json", JSON.stringify(people), function(err){
+    fs.writeFile("./radios.json", JSON.stringify(radios), function(err){
         if(!err)
-            res.send({"ris": "ok"});
+            return;
         else
             res.status(500).send("Errore interno del server (aggiornamento db fallito)");
     });
